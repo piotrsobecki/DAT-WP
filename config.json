@@ -1,0 +1,11 @@
+{
+  "_comment":{
+	"wordpress_dir":{
+		"description":"Location of your wordpress installation",
+		"example":{
+			"wordpress_dir":"E:/xampp/htdocs/wordpress"			
+		}
+	}
+  },
+  "wordpress_dir":"YOUR_WORDPRESS_INSTALL_DIR"
+}

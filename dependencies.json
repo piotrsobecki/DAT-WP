@@ -1,0 +1,16 @@
+{  
+   "_comment":{  
+      "plugins":{  
+         "description":"Plugins value is an array of array where inner array represent arguments to wp install plugin of wp-cli.",
+         "example":{  
+            "plugins":[  
+               [ "posts-to-posts","--activate" ],
+               [ "akismet","--activate" ]
+            ]
+         }
+      }
+   },
+   "plugins":[  
+
+   ]
+}
