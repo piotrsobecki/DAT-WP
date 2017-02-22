@@ -1,7 +1,7 @@
-WP-Project-Skeleton
+WP Project Skeleton
 =========================
-Project Deployment Automation Template for WordPress 
-==
+###Project Deployment Automation Template for WordPress 
+
 
 GPL-licensed code template grunt based deployment automation of wordpress projects.
 
