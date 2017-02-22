@@ -1,7 +1,7 @@
-DAT4WP - Deployment Automation Template for WordPress 
+WP-Project-Skeleton: Project Deployment Automation Template for WordPress 
 =========================
 
-A robust and GPL-licensed code template for creating a standards-compliant WordPress plugin.
+GPL-licensed code template grunt based deployment automation of wordpress projects.
 
 ##Tools
 
