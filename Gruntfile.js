@@ -23,16 +23,21 @@ module.exports = function( grunt ){
 
 	grunt.config.init({
 		
-		clean: [
-			'target'
-		],
+
 		// setting folder templates
 		dirs: {
-			css: 'assets/css',
-			less: 'assets/css',
-			js: 'assets/js'
+			css: 'src/*/*/assets/css',
+			less: 'src/*/*/assets/css',
+			js: 'src/*/*/assets/js',
+			plugins: 'src/plugins/',
+            themes: 'src/themes/',
+			target: 'target',
+            target_themes: '<%= dirs.target %>/themes',
+            target_plugins: '<%= dirs.target %>/plugins'
 		},
-
+        clean: [
+            '<%= dirs.target %>/'
+        ],
 		// Compile all .less files.
 		less: {
 			compile: {
@@ -88,16 +93,16 @@ module.exports = function( grunt ){
 		watch: {
 			less: {
 				files: [
-					'<%= dirs.less %>/*.less',
+					'<%= dirs.less %>/*.less'
 				],
-				tasks: ['less', 'cssmin'],
+				tasks: ['less', 'cssmin','undeploy','deploy-no-deps']
 			},
 			js: {
 				files: [
 					'<%= dirs.js %>/*js',
 					'!<%= dirs.js %>/*.min.js'
 				],
-				tasks: ['uglify']
+				tasks: ['uglify','package','undeploy','deploy-no-deps']
 			}
 		},
 
@@ -106,15 +111,15 @@ module.exports = function( grunt ){
 				files: [
 				{
 					expand: true,
-					cwd: 'src/plugins/',
+					cwd: '<%= dirs.plugins %>',
 					src: ['*'],
-					dest: 'target/plugins/'
+					dest: '<%= dirs.target_plugins %>'
 				},
 				{
 					expand: true,
-					cwd: 'src/themes/',
+					cwd: '<%= dirs.themes %>',
 					src: ['*'],
-					dest: 'target/themes/'
+					dest: '<%= dirs.target_themes %>'
 				}
 			]
 			}
@@ -226,14 +231,28 @@ module.exports = function( grunt ){
 
     // Register tasks
     grunt.registerTask(
-		'install', [
+		'prepare', [
 			'less',
 			'cssmin',
-			'uglify',
-			'zip_directories'
+			'uglify'
 		]
 	);
-	
+
+    // Register tasks
+    grunt.registerTask(
+        'package', [
+            'zip_directories'
+        ]
+    );
+
+    // Register tasks
+    grunt.registerTask(
+        'install', [
+            'prepare',
+			'package'
+        ]
+    );
+
     // Register tasks
     grunt.registerTask(
 		'undeploy', [
