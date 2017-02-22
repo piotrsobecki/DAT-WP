@@ -1,7 +1,4 @@
 {  
-	"_config":{
-		"test":"true"
-	},
     "properties":{  
         "wordpress_dir":"E:/xampp/htdocs/wordpress"
     },

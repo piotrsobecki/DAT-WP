@@ -15,5 +15,8 @@
                 "wp-cli":"Plugins value is an recursive object where inner properties represent arguments to wp install plugin of wp-cli."
             }
         }
-    }
+    },
+	"properties":{
+		"env":"local"
+	}
 }

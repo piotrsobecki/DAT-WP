@@ -1,0 +1,5 @@
+{  
+    "properties":{  
+        "wordpress_dir":"{YOUR LOCAL WORDPRESS PATH}"
+    }
+}
