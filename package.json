@@ -3,7 +3,7 @@
 	"title": "WordPress Deployment Automation Template",
 	"version": "1.0.0",
 	"homepage": "https://github.com/piotrsobecki/WordPress-Deployment-Automation-Template",
-	"license": "Apache-2.0",
+	"license": "GPL",
 	"repository": {
 		"type": "git",
 		"url": "git://github.com/piotrsobecki/WordPress-Deployment-Automation-Template.git"
