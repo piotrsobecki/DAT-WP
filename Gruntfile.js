@@ -1,13 +1,25 @@
 /* jshint node:true */
 const path = require('path');
+const merge = require('merge');
 
 module.exports = function( grunt ){
-	'use strict';
+	//'use strict';
 
-	var deps_file = "dependencies.json";
 	var config_file = "config.json";
 	var target_plugins_dir = "./target/plugins";
+	
 	var config = grunt.file.readJSON(config_file);
+	console.log(config);
+
+	
+	var env_config_file = "config."+config.properties.env+".json";
+	
+	var config_env = grunt.file.readJSON(env_config_file);
+	console.log(config_env);
+
+	var config = merge.recursive(true, config, config_env);
+	
+	console.log(config);
 
 	grunt.config.init({
 		
@@ -106,115 +118,98 @@ module.exports = function( grunt ){
 				}
 			]
 			}
-		},
-		'wp-cli':{
-			uninstall_plugin:{
-                command:'plugin',
-                subcommand:'uninstall',
-                arguments:['"wp-challenge"','--deactivate'],
-                options:[],
-                path:config.wordpress_dir
-			},
-			install_plugin:{
-				command:'plugin',
-                subcommand:'install',
-                arguments:['target/plugins/wp-challenge.zip','--activate'],
-				options:[],
-				path:config.wordpress_dir
-			},
-            install_dependency: {
-                command:'plugin',
-                subcommand:'install',
-                options:[],
-                path:config.wordpress_dir
-            }
 		}
 	});
 
-    grunt.registerTask('usetheforce_on',
-        'force the force option on if needed',
-        function() {
-            if ( !grunt.option( 'force' ) ) {
-                grunt.config.set('usetheforce_set', true);
-                grunt.option( 'force', true );
-            }
-        });
+    grunt.registerTask('usetheforce_on', 'force the force option on if needed',  function() {
+		if ( !grunt.option( 'force' ) ) {
+			grunt.config.set('usetheforce_set', true);
+			grunt.option( 'force', true );
+		}
+    });
 
-    grunt.registerTask('usetheforce_restore',
-        'turn force option off if we have previously set it',
-        function() {
-            if ( grunt.config.get('usetheforce_set') ) {
-                grunt.option( 'force', false );
-            }
-        });
+    grunt.registerTask('usetheforce_restore', 'Turn force option off if we have previously set it', function() {
+		if ( grunt.config.get('usetheforce_set') )   {
+			grunt.option( 'force', false );
+		}
+	});
 		
-    grunt.task.registerTask('wp-cli-install-dep', 'Install wp cli dependency.', function() {
+		
+	grunt.task.registerTask('wp-cli-invoke', 'WP-CLI command invoker', function() {
 		var args = Array.prototype.slice.call(arguments);
+		var command = args[0];
+		var subcommand = args[1];
+		var arguments = args.slice(2, args.length);
+		grunt.config.merge({
+			'wp-cli':{
+				'invoke_command':{
+					'path':config.properties.wordpress_dir,
+					'command':command,
+					'subcommand':subcommand,
+					'arguments':arguments
+				}
+			}
+		});
+		grunt.task.run(['wp-cli:invoke_command']);
+    });
+		
+	
+	function get_task(){
+		return arguments.join(':');
+		
+	}
+	
+	function get_wp_cli_task(command,subcommand,args){
 		console.log(args);
-		grunt.config.merge({
-			'wp-cli':{
-				'install_dependency':{
-				   'arguments':args
-				}
-			}
-		});
-		grunt.task.run(['wp-cli:install_dependency']);
-    });
+		return 'wp-cli-invoke:'+command+':'+subcommand+':'+args.join(":");
+	}
 	
-    grunt.task.registerTask('wp-cli-install-deps', 'Install wp cli dependencies.', function(dependenciesFile) {
-		console.log(dependenciesFile);
-        var dependency = grunt.file.readJSON(dependenciesFile);
+	
+	function get_wp_cli_tasks_for_args(command,subcommand,arguments){
 		var tasks = [];
-        for (var i = 0; i < dependency.plugins.length; i++) {
-			tasks.push('wp-cli-install-dep:'+dependency.plugins[i].join(':'));
-        }
+		if (arguments.length>0){
+			for (var i = 0; i < arguments.length; i++) {
+				tasks.push(get_wp_cli_task(command,subcommand,arguments[i]));
+			}
+		}
+		return tasks;
+	}
+	
+    grunt.task.registerTask('wp-cli-dependencies', 'Manage wp cli dependencies.', function() {
+		var tasks = [];
+		var wp_cli_commands = config.dependencies['wp-cli'];
+		for (var command in wp_cli_commands) {
+			var subcommands = wp_cli_commands[command];
+			for (var subcommand in subcommands){
+				tasks = tasks.concat(get_wp_cli_tasks_for_args(command,subcommand,subcommands[subcommand]));
+			}
+		}
+		console.log(tasks);
 		grunt.task.run(tasks);
     });
 	
-	grunt.task.registerTask('wp-cli-uninstall-plugin', 'Uninstall plugins.', function(plugin_name) {
-		grunt.config.merge({
-			'wp-cli':{
-				'uninstall_plugin':{
-					 'arguments':[plugin_name,'--deactivate']
-				}
-			}
-		});
-		grunt.task.run(['wp-cli:uninstall_plugin']);
-    });
 	
-    grunt.task.registerTask('wp-cli-uninstall-plugins', 'Uninstall plugins.', function(pluginsDir) {
-		var plugins = grunt.file.expand({filter: "isFile", cwd: pluginsDir}, ["*.zip"]);
-		var tasks = [];
-        for (var i = 0; i < plugins.length; i++) {
-			var plugin_file = pluginsDir + "/" + plugins[i];
+    grunt.task.registerTask('wp-cli-uninstall-plugins', 'Uninstall build plugins.', function(pluginsDir) {
+		var pluginFiles = grunt.file.expand({filter: "isFile", cwd: pluginsDir}, ["*.zip"]);
+		var plugins = [];
+        for (var i = 0; i < pluginFiles.length; i++) {
+			var plugin_file = pluginsDir + "/" + pluginFiles[i];
 			var plugin_name = path.basename(plugin_file,'.zip');
-			tasks.push('wp-cli-uninstall-plugin:'+plugin_name);
+			plugins.push([plugin_name,'--deactivate']);
         }
-		grunt.task.run(tasks);
+		grunt.task.run(get_wp_cli_tasks_for_args('plugin','uninstall',plugins));
     });
 	
-	grunt.task.registerTask('wp-cli-install-plugin', 'Install plugins.', function(plugin_file) {
-		grunt.config.merge({
-			'wp-cli':{
-				'install_plugin':{
-					 'arguments':[plugin_file,'--activate']
-				}
-			}
-		});
-		grunt.task.run(['wp-cli:install_plugin']);
-    });
 	
-	grunt.task.registerTask('wp-cli-install-plugins', 'Install plugins.', function(pluginsDir) {
-		var plugins = grunt.file.expand({filter: "isFile", cwd: pluginsDir}, ["*.zip"]);
-		var tasks = [];
-        for (var i = 0; i < plugins.length; i++) {
-			var plugin_file = pluginsDir + "/" + plugins[i];
-			tasks.push('wp-cli-install-plugin:'+plugin_file);
-        }
-		grunt.task.run(tasks);
+	grunt.task.registerTask('wp-cli-install-plugins', 'Install build plugins.', function(pluginsDir) {
+		var pluginFiles = grunt.file.expand({filter: "isFile", cwd: pluginsDir}, ["*.zip"]);
+		var plugins = [];
+        for (var i = 0; i < pluginFiles.length; i++) {
+			var plugin_file = pluginsDir + "/" + pluginFiles[i];
+ 			plugins.push([plugin_file,'--activate']);
+        }		
+		grunt.task.run(get_wp_cli_tasks_for_args('plugin','install',plugins));
     });
-	
-
 	
 	
 	grunt.loadNpmTasks('grunt-contrib-clean');
@@ -252,7 +247,7 @@ module.exports = function( grunt ){
     grunt.registerTask(
 		'deploy-deps', [
 			'usetheforce_on', //Prevents task from failing for example if plugin is not installed / activated
-			'wp-cli-install-deps:'+deps_file,
+			'wp-cli-dependencies',
 			'usetheforce_restore' //Restores default configuration
 		]
 	);

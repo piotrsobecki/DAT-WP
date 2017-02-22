@@ -1,0 +1,31 @@
+{  
+	"_config":{
+		"test":"true"
+	},
+    "properties":{  
+        "wordpress_dir":"E:/xampp/htdocs/wordpress"
+    },
+    "dependencies":{  
+        "wp-cli":{  
+			"plugin":{
+				"uninstall":[  
+					[  
+						"posts-to-posts",
+						"--deactivate"
+					],
+					[  
+						"akismet",
+						"--deactivate"
+					]
+				],
+				"install":[  
+					[  
+						"posts-to-posts",
+						"--activate"
+					]
+				]
+			}
+
+        }
+    }
+}
